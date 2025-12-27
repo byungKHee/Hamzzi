@@ -11,7 +11,7 @@ public class UciServer {
         CommandFactory commandFactory = new CommandFactory();
         Scanner scanner = new Scanner(System.in);
 
-        while (!context.isQuitting() && scanner.hasNextLine()) {
+        while (!context.isStopped() && scanner.hasNextLine()) {
             String line = scanner.nextLine();
             if (line.isEmpty()) continue;
 
