@@ -1,0 +1,74 @@
+############################
+# Gradle
+############################
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+############################
+# IntelliJ IDEA
+############################
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+############################
+# Eclipse
+############################
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+############################
+# NetBeans
+############################
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+############################
+# VS Code
+############################
+.vscode/
+
+############################
+# OS / Misc
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# Logs (엔진 개발 시 유용)
+############################
+*.log
+
+############################
+# JVM crash logs
+############################
+hs_err_pid*
+
+### Engine runtime artifacts ###
+*.pgn
+*.epd
+*.fen
+
+### Native build artifacts ###
+*.exe
+*.dll
+*.so
+*.dylib
