@@ -16,6 +16,9 @@ public class UciServer {
             if (line.isEmpty()) continue;
 
             commandFactory.getCommand(line).execute(context, line);
+
+            // for debug
+            System.out.println(context.getBoard().toString());
         }
     }
 }
