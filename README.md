@@ -6,10 +6,17 @@
 * **Ultimate Objective**: Defeat **Nora (Elo 2200)** on [chess.com](https://chess.com).
 
 ## 🏆 Bot Clear Status
-| Bot Name | Elo | Status | Note       |
-| :--- | :--- | :--- |:-----------|
-| **Martin** | 250 | ✅ Cleared | 2025.12.28 |
-| **Nora** | 2200 | 🏗 In Progress |            |
+| Bot Name   | Elo  | Status         | Note       |
+|:-----------|:-----|:---------------|:-----------|
+| **Martin** | 250  | ✅ Cleared      | 2025.12.28 |
+| **Elani**  | 400  | ✅ Cleared      | 2025.12.28 |
+| **Janjay** | 700  | ✅ Cleared      | 2025.12.28 |
+| **Maria**  | 1000 | ✅ Cleared      | 2025.12.28 |
+| **Nelson** | 1300 | ✅ Cleared      | 2025.12.28 |
+| **Wendy**  | 1500 | 🏗 In Progress |            |
+| **Wally**  | 1800 | 🏗 In Progress |            |
+| **Li**     | 2000 | 🏗 In Progress |            |
+| **Nora**   | 2200 | 🏗 In Progress |            |
 
 ## Version
 0.1.0
