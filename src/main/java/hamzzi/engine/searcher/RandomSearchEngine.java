@@ -33,7 +33,7 @@ public class RandomSearchEngine implements SearchEngine {
 
         // 3. 무작위 수 반환
         Move bestMove = legalMoves.get(random.nextInt(legalMoves.size()));
-        SearchResult.MoveAnalyses analasis = new SearchResult.MoveAnalyses(
+        SearchResult.MoveAnalysis analasis = new SearchResult.MoveAnalysis(
                 bestMove,
                 0,
                 1,
