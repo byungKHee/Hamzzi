@@ -1,6 +1,9 @@
 package hamzzi.uci.core;
 
 import com.github.bhlangonijr.chesslib.Board;
+import hamzzi.engine.searcher.RandomSearchEngine;
+import hamzzi.engine.searcher.SearchEngine;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,10 +23,13 @@ public class EngineContext {
     // 3. 제어 신호: 검색 스레드들이 주기적으로 확인하여 즉시 중단하게 함
     private volatile boolean stopSignal = false;
 
-    // 4. 엔진 설정값 (UCI Options)
+    // 4. 사용할 엔진 종류
+    private SearchEngine searchEngine = new RandomSearchEngine();
+
+    // 5. 엔진 설정값 (UCI Options)
     private final Map<String, String> options = new ConcurrentHashMap<>();
 
-    // 5. 검색 제한 조건 (Time Control & Constraints)
+    // 6. 검색 제한 조건 (Time Control & Constraints)
     private final SearchConstraints constraints = new SearchConstraints();
 
     public EngineContext() {
@@ -52,6 +58,15 @@ public class EngineContext {
 
     public boolean isStopped() {
         return stopSignal;
+    }
+
+    // --- 엔진 관리 ---
+    public SearchEngine getSearchEngine() {
+        return searchEngine;
+    }
+
+    public void setSearchEngine(SearchEngine searchEngine) {
+        this.searchEngine = searchEngine;
     }
 
     // --- 치환표(TT) 관리 ---

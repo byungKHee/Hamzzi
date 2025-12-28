@@ -1,9 +1,6 @@
 package hamzzi.uci.factory;
 
-import hamzzi.uci.command.UciCommand;
-import hamzzi.uci.command.UciCommandIsReady;
-import hamzzi.uci.command.UciCommandPosition;
-import hamzzi.uci.command.UciCommandUci;
+import hamzzi.uci.command.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +13,8 @@ public class CommandFactory {
         commands.put("uci", new UciCommandUci());
         commands.put("isready", new UciCommandIsReady());
         commands.put("position", new UciCommandPosition());
+        commands.put("go", new UciCommandGo());
+        commands.put("stop",  new UciCommandStop());
     }
 
     public UciCommand getCommand(String command) {

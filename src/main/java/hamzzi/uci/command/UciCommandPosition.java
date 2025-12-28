@@ -3,6 +3,12 @@ package hamzzi.uci.command;
 import com.github.bhlangonijr.chesslib.Board;
 import hamzzi.uci.core.EngineContext;
 
+/**
+ * 'position' 명령어에 대응하는 클래스
+ * At least one position command must be sent before each go command to inform the engine of the current game state.
+ * The first parameter indicates the initial game state from which moves in the second parameter have been played;
+ * either the standard chess starting position with startpos or a custom initial position with fen followed by a FEN string.
+ */
 public class UciCommandPosition implements UciCommand {
 
     @Override

@@ -11,14 +11,14 @@ public class UciServer {
         CommandFactory commandFactory = new CommandFactory();
         Scanner scanner = new Scanner(System.in);
 
-        while (!context.isStopped() && scanner.hasNextLine()) {
+        while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             if (line.isEmpty()) continue;
 
             commandFactory.getCommand(line).execute(context, line);
 
             // for debug
-            System.out.println(context.getBoard().toString());
+//            System.out.println(context.getBoard().toString());
         }
     }
 }
