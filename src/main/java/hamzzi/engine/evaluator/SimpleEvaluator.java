@@ -7,7 +7,7 @@ import com.github.bhlangonijr.chesslib.Side;
 
 public class SimpleEvaluator implements Evaluator {
 
-    private static final int MATED = -9999;
+    private static final int MATED = -9999999;
     private static final int DRAW = 0;
 
     @Override
