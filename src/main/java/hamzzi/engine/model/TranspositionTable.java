@@ -8,6 +8,7 @@ import com.github.bhlangonijr.chesslib.move.Move;
  */
 public class TranspositionTable {
     private final TTEntry table[];
+    private final int AGE_MARGIN = 2;
     private int currentAge = 0;
 
     public TranspositionTable(int sizeMB){
@@ -16,16 +17,39 @@ public class TranspositionTable {
     }
 
     public void store(long key, Move move, int score, int depth, byte flag) {
-        int index = (int) (Math.abs(key) % table.length);
-        // Deepest-Wins + Aging 전략 적용
-        if (table[index] == null || depth >= table[index].getDepth()) {
+        int index = getIndex(key);
+        TTEntry existingEntry = table[index];
+
+        // 1. 빈 슬롯이면 즉시 저장
+        if (existingEntry == null) {
+            table[index] = new TTEntry(key, move, score, depth, flag, currentAge);
+            return;
+        }
+
+        // 2. 같은 보드인 경우
+        // - depth 기준으로 교체
+        if (existingEntry.key() == key) {
+            if (depth >= existingEntry.depth()) {
+                table[index] = new TTEntry(key, move, score, depth, flag, currentAge);
+            }
+            return;
+        }
+
+        // 3. 다른 보드인 경우
+        // - AGE_MARGIN 이상의 유예 기간이 지난 경우 교체합니다.
+        // - 혹은 유예 기간 내에 있더라도 새 데이터의 깊이가 더 깊다면 교체합니다.
+        boolean isOld = (this.currentAge - existingEntry.age()) >= AGE_MARGIN;
+        boolean isDeeper = depth >= existingEntry.depth();
+
+        if (isOld || isDeeper) {
             table[index] = new TTEntry(key, move, score, depth, flag, currentAge);
         }
     }
 
-    public TTEntry get(long key){
-        int index = (int) (Math.abs(key) % table.length);
+    public TTEntry get(long key) {
+        int index = getIndex(key);
         TTEntry entry = table[index];
+
         if (entry != null && entry.key() == key) {
             return entry;
         }
@@ -34,5 +58,9 @@ public class TranspositionTable {
 
     public void addAge() {
         currentAge ++;
+    }
+
+    private int getIndex(long key) {
+        return (int) ((key & Long.MAX_VALUE) % table.length);
     }
 }
