@@ -18,7 +18,7 @@ public class AlphaBetaSearchEngine implements SearchEngine {
 
     private static final int INF = 10000000;
     private static final int MATE_SCORE = 1000000;
-    private final int MAX_DEPTH = 6;
+    private final int MAX_DEPTH = 8;
 
     public AlphaBetaSearchEngine(TranspositionTable tt) {
         this.tt = tt;

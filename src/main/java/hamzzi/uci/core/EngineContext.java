@@ -1,6 +1,8 @@
 package hamzzi.uci.core;
 
 import com.github.bhlangonijr.chesslib.Board;
+import hamzzi.engine.model.TranspositionTable;
+import hamzzi.engine.searcher.AlphaBetaSearchEngine;
 import hamzzi.engine.searcher.MinMaxSearchEngine;
 import hamzzi.engine.searcher.SearchEngine;
 
@@ -24,7 +26,7 @@ public class EngineContext {
     private volatile boolean stopSignal = false;
 
     // 4. 사용할 엔진 종류
-    private SearchEngine searchEngine = new MinMaxSearchEngine();
+    private SearchEngine searchEngine = new AlphaBetaSearchEngine(new TranspositionTable(128));
 
     // 5. 엔진 설정값 (UCI Options)
     private final Map<String, String> options = new ConcurrentHashMap<>();
