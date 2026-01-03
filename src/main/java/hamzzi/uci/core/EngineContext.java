@@ -20,7 +20,7 @@ public class EngineContext {
     // 2. 치환표 (Transposition Table): 계산 결과 공유용 맵
     // Key: Board의 Zobrist Key(Long), Value: 탐색 결과(Score, BestMove 등)
     // 멀티스레드 환경이므로 ConcurrentHashMap 사용
-    private final Map<Long, Object> transpositionTable = new ConcurrentHashMap<>();
+    private final TranspositionTable tt = new TranspositionTable(256);
 
     // 3. 제어 신호: 검색 스레드들이 주기적으로 확인하여 즉시 중단하게 함
     private volatile boolean stopSignal = false;
@@ -72,12 +72,8 @@ public class EngineContext {
     }
 
     // --- 치환표(TT) 관리 ---
-    public Map<Long, Object> getTranspositionTable() {
-        return transpositionTable;
-    }
-
-    public void clearTranspositionTable() {
-        transpositionTable.clear();
+    public TranspositionTable getTranspositionTable() {
+        return tt;
     }
 
     // --- 옵션 관리 ---
