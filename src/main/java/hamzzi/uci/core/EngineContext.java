@@ -3,7 +3,6 @@ package hamzzi.uci.core;
 import com.github.bhlangonijr.chesslib.Board;
 import hamzzi.engine.model.TranspositionTable;
 import hamzzi.engine.searcher.AlphaBetaSearchEngine;
-import hamzzi.engine.searcher.MinMaxSearchEngine;
 import hamzzi.engine.searcher.SearchEngine;
 
 import java.util.Map;
@@ -14,19 +13,22 @@ import java.util.concurrent.ConcurrentHashMap;
  * 모든 UCI 명령어 객체는 이 객체를 공유하여 엔진 상태를 변경하거나 조회합니다.
  */
 public class EngineContext {
+    private static final int DEFAULT_HASH_MB = 256;
+    private static final int MIN_HASH_MB = 1;
+    private static final int MAX_HASH_MB = 2048;
+
     // 1. 현재 체스판 상태 (원본)
     private Board board = new Board();
 
     // 2. 치환표 (Transposition Table): 계산 결과 공유용 맵
     // Key: Board의 Zobrist Key(Long), Value: 탐색 결과(Score, BestMove 등)
-    // 멀티스레드 환경이므로 ConcurrentHashMap 사용
-    private final TranspositionTable tt = new TranspositionTable(256);
+    private volatile TranspositionTable tt = new TranspositionTable(DEFAULT_HASH_MB);
 
     // 3. 제어 신호: 검색 스레드들이 주기적으로 확인하여 즉시 중단하게 함
     private volatile boolean stopSignal = false;
 
     // 4. 사용할 엔진 종류
-    private SearchEngine searchEngine = new AlphaBetaSearchEngine(new TranspositionTable(128));
+    private SearchEngine searchEngine = new AlphaBetaSearchEngine();
 
     // 5. 엔진 설정값 (UCI Options)
     private final Map<String, String> options = new ConcurrentHashMap<>();
@@ -36,7 +38,7 @@ public class EngineContext {
 
     public EngineContext() {
         // 기본 옵션 초기화
-        options.put("Hash", "16");
+        options.put("Hash", String.valueOf(DEFAULT_HASH_MB));
         options.put("Threads", "1");
     }
 
@@ -72,17 +74,33 @@ public class EngineContext {
     }
 
     // --- 치환표(TT) 관리 ---
-    public TranspositionTable getTranspositionTable() {
+    public synchronized TranspositionTable getTranspositionTable() {
         return tt;
     }
 
     // --- 옵션 관리 ---
-    public void setOption(String name, String value) {
+    public synchronized void setOption(String name, String value) {
         options.put(name, value);
+        if ("Hash".equalsIgnoreCase(name)) {
+            int hashMb = parseHashMb(value);
+            options.put("Hash", String.valueOf(hashMb));
+            tt = new TranspositionTable(hashMb);
+            log("Hash resized to " + hashMb + " MB");
+        }
     }
 
     public String getOption(String name) {
         return options.get(name);
+    }
+
+    private int parseHashMb(String rawValue) {
+        try {
+            int parsed = Integer.parseInt(rawValue);
+            if (parsed < MIN_HASH_MB) return MIN_HASH_MB;
+            return Math.min(parsed, MAX_HASH_MB);
+        } catch (NumberFormatException e) {
+            return DEFAULT_HASH_MB;
+        }
     }
 
     // --- 검색 제한 조건 (Inner Class) ---

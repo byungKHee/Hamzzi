@@ -15,6 +15,7 @@ public class CommandFactory {
         commands.put("position", new UciCommandPosition());
         commands.put("go", new UciCommandGo());
         commands.put("stop",  new UciCommandStop());
+        commands.put("setoption", new UciCommandSetOption());
     }
 
     public UciCommand getCommand(String command) {

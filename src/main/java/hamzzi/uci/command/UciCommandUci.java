@@ -16,8 +16,9 @@ public class UciCommandUci implements UciCommand {
         context.send("id name Hamzzi");
         context.send("id author byungKHee");
 
-        // TODO
         // 2. option 명세 전달
+        context.send("option name Hash type spin default 256 min 1 max 2048");
+        context.send("option name Threads type spin default 1 min 1 max 1");
 
         // 3. uciok: 모든 설정 보고가 끝났음을 알림
         context.send("uciok");

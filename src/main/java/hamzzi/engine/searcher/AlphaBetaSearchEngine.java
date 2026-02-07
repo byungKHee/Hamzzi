@@ -18,7 +18,6 @@ import java.util.List;
 
 public class AlphaBetaSearchEngine implements SearchEngine {
     private final Evaluator evaluator = new SimpleEvaluator();
-    private final TranspositionTable tt;
 
     private static final int INF = 10_000_000;
     private static final int MATE_SCORE = 1_000_000;
@@ -33,12 +32,12 @@ public class AlphaBetaSearchEngine implements SearchEngine {
     private long hardStopTimeMs;
     private int currentSelDepth;
 
-    public AlphaBetaSearchEngine(TranspositionTable tt) {
-        this.tt = tt;
+    public AlphaBetaSearchEngine() {
     }
 
     @Override
     public void search(EngineContext context, Board board, SearchListener listener) {
+        TranspositionTable tt = context.getTranspositionTable();
         Move finalBestMove = null;
         int finalBestScore = -INF;
         int completedDepth = 0;
@@ -61,14 +60,14 @@ public class AlphaBetaSearchEngine implements SearchEngine {
             List<Move> moves = board.legalMoves();
             if (moves.isEmpty()) break;
 
-            Move ttMove = getTTMove(board);
+            Move ttMove = getTTMove(board, tt);
             sortRootMoves(board, moves, ttMove, finalBestMove);
 
             for (Move move : moves) {
                 if (shouldStop(context)) break;
 
                 board.doMove(move);
-                int score = -alphaBeta(context, board, -beta, -alpha, depth - 1, 1);
+                int score = -alphaBeta(context, board, -beta, -alpha, depth - 1, 1, tt);
                 board.undoMove();
 
                 if (score > alpha) {
@@ -114,7 +113,15 @@ public class AlphaBetaSearchEngine implements SearchEngine {
         ));
     }
 
-    private int alphaBeta(EngineContext context, Board board, int alpha, int beta, int depth, int ply) {
+    private int alphaBeta(
+            EngineContext context,
+            Board board,
+            int alpha,
+            int beta,
+            int depth,
+            int ply,
+            TranspositionTable tt
+    ) {
         if (shouldStop(context)) return evaluator.evaluate(board);
 
         nodes++;
@@ -148,7 +155,7 @@ public class AlphaBetaSearchEngine implements SearchEngine {
 
             boolean isCapture = isCapture(board, move);
             board.doMove(move);
-            int score = -alphaBeta(context, board, -beta, -alpha, depth - 1, ply + 1);
+            int score = -alphaBeta(context, board, -beta, -alpha, depth - 1, ply + 1, tt);
             board.undoMove();
 
             if (score > bestScore) {
@@ -255,7 +262,7 @@ public class AlphaBetaSearchEngine implements SearchEngine {
         return a != null && a.equals(b);
     }
 
-    private Move getTTMove(Board board) {
+    private Move getTTMove(Board board, TranspositionTable tt) {
         TTEntry entry = tt.get(board.getZobristKey());
         return entry != null ? entry.bestMove() : null;
     }
