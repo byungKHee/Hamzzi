@@ -4,7 +4,7 @@ import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.Piece;
 import com.github.bhlangonijr.chesslib.move.Move;
 import hamzzi.engine.evaluator.Evaluator;
-import hamzzi.engine.evaluator.SimpleEvaluator;
+import hamzzi.engine.evaluator.PSTEvaluator;
 import hamzzi.engine.model.SearchInfo;
 import hamzzi.engine.model.SearchResult;
 import hamzzi.engine.model.TTEntry;
@@ -14,10 +14,11 @@ import hamzzi.uci.core.EngineContext;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AlphaBetaSearchEngine implements SearchEngine {
-    private final Evaluator evaluator = new SimpleEvaluator();
+    private final Evaluator evaluator = new PSTEvaluator();
 
     private static final int INF = 10_000_000;
     private static final int MATE_SCORE = 1_000_000;
@@ -63,8 +64,25 @@ public class AlphaBetaSearchEngine implements SearchEngine {
             Move ttMove = getTTMove(board, tt);
             sortRootMoves(board, moves, ttMove, finalBestMove);
 
-            for (Move move : moves) {
+            for (int moveIndex = 0; moveIndex < moves.size(); moveIndex++) {
+                Move move = moves.get(moveIndex);
                 if (shouldStop(context)) break;
+
+                long elapsed = System.currentTimeMillis() - startTimeMs;
+                long nps = elapsed > 0 ? (nodes * 1000L) / elapsed : nodes;
+                listener.onSearchInfo(new SearchInfo(
+                        depth,
+                        currentSelDepth,
+                        null,
+                        null,
+                        nodes,
+                        elapsed,
+                        nps,
+                        Collections.emptyList(),
+                        move,
+                        moveIndex + 1,
+                        tt.hashfullPermill()
+                ));
 
                 board.doMove(move);
                 int score = -alphaBeta(context, board, -beta, -alpha, depth - 1, 1, tt);
@@ -84,14 +102,19 @@ public class AlphaBetaSearchEngine implements SearchEngine {
 
             long elapsed = System.currentTimeMillis() - startTimeMs;
             long nps = elapsed > 0 ? (nodes * 1000L) / elapsed : nodes;
+            Integer scoreMate = toMateScore(finalBestScore);
             listener.onSearchInfo(new SearchInfo(
                     depth,
                     currentSelDepth,
-                    finalBestScore,
+                    scoreMate == null ? finalBestScore : null,
+                    scoreMate,
                     nodes,
                     elapsed,
                     nps,
-                    PVExtractor.extract(board, depth, tt)
+                    PVExtractor.extract(board, depth, tt),
+                    null,
+                    0,
+                    tt.hashfullPermill()
             ));
 
             if (Math.abs(finalBestScore) >= MATE_SCORE - 200) {
@@ -138,7 +161,7 @@ public class AlphaBetaSearchEngine implements SearchEngine {
 
         if (board.isMated()) return -MATE_SCORE + ply;
         if (board.isDraw()) return 0;
-        if (depth <= 0) return evaluator.evaluate(board);
+        if (depth <= 0) return quiescence(context, board, alpha, beta, ply);
 
         int bestScore = -INF;
         Move bestMove = null;
@@ -192,6 +215,44 @@ public class AlphaBetaSearchEngine implements SearchEngine {
         return hardStopTimeMs > 0 && System.currentTimeMillis() >= hardStopTimeMs;
     }
 
+    private int quiescence(EngineContext context, Board board, int alpha, int beta, int ply) {
+        if (shouldStop(context)) return evaluator.evaluate(board);
+
+        nodes++;
+        currentSelDepth = Math.max(currentSelDepth, ply);
+
+        if (board.isMated()) return -MATE_SCORE + ply;
+        if (board.isDraw()) return 0;
+
+        int standPat = evaluator.evaluate(board);
+        if (standPat >= beta) {
+            return beta;
+        }
+        if (standPat > alpha) {
+            alpha = standPat;
+        }
+
+        List<Move> captureMoves = getCaptureMoves(board);
+        captureMoves.sort(Comparator.comparingInt((Move m) -> mvvLvaScore(board, m)).reversed());
+
+        for (Move move : captureMoves) {
+            if (shouldStop(context)) break;
+
+            board.doMove(move);
+            int score = -quiescence(context, board, -beta, -alpha, ply + 1);
+            board.undoMove();
+
+            if (score >= beta) {
+                return beta;
+            }
+            if (score > alpha) {
+                alpha = score;
+            }
+        }
+
+        return alpha;
+    }
+
     private void sortRootMoves(Board board, List<Move> moves, Move ttMove, Move previousBestMove) {
         moves.sort(Comparator.comparingInt((Move m) -> moveOrderScore(board, m, 0, ttMove, previousBestMove)).reversed());
     }
@@ -243,6 +304,16 @@ public class AlphaBetaSearchEngine implements SearchEngine {
         return board.getPiece(move.getTo()) != Piece.NONE;
     }
 
+    private List<Move> getCaptureMoves(Board board) {
+        List<Move> captures = new ArrayList<>();
+        for (Move move : board.legalMoves()) {
+            if (isCapture(board, move)) {
+                captures.add(move);
+            }
+        }
+        return captures;
+    }
+
     private void updateKillerMoves(Move move, int ply) {
         if (ply >= MAX_PLY || sameMove(move, killerMoves[ply][0])) return;
         killerMoves[ply][1] = killerMoves[ply][0];
@@ -265,5 +336,15 @@ public class AlphaBetaSearchEngine implements SearchEngine {
     private Move getTTMove(Board board, TranspositionTable tt) {
         TTEntry entry = tt.get(board.getZobristKey());
         return entry != null ? entry.bestMove() : null;
+    }
+
+    private Integer toMateScore(int score) {
+        int absScore = Math.abs(score);
+        if (absScore < MATE_SCORE - 1000) {
+            return null;
+        }
+        int mateInPly = MATE_SCORE - absScore;
+        int mateInMoves = Math.max(1, (mateInPly + 1) / 2);
+        return score > 0 ? mateInMoves : -mateInMoves;
     }
 }

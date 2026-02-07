@@ -10,6 +10,7 @@ public class TranspositionTable {
     private final TTEntry table[];
     private final int AGE_MARGIN = 2;
     private int currentAge = 0;
+    private int usedSlots = 0;
 
     public TranspositionTable(int sizeMB){
         int entryCount = (sizeMB * 1024 * 1024) / 50; // TTEntry 당 약 50바이트로 가정
@@ -23,6 +24,7 @@ public class TranspositionTable {
         // 1. 빈 슬롯이면 즉시 저장
         if (existingEntry == null) {
             table[index] = new TTEntry(key, move, score, depth, flag, currentAge);
+            usedSlots++;
             return;
         }
 
@@ -58,6 +60,14 @@ public class TranspositionTable {
 
     public void addAge() {
         currentAge ++;
+    }
+
+    /**
+     * UCI hashfull 값(permill) 반환: 0~1000
+     */
+    public int hashfullPermill() {
+        if (table.length == 0) return 0;
+        return (int) ((usedSlots * 1000L) / table.length);
     }
 
     private int getIndex(long key) {

@@ -10,10 +10,14 @@ import java.util.List;
 public record SearchInfo(
         int depth,
         int seldepth,
-        int scoreCp,
+        Integer scoreCp,
+        Integer scoreMate,
         long nodes,
         long timeMs,
         long nps,
-        List<Move> pv
+        List<Move> pv,
+        Move currMove,
+        int currMoveNumber,
+        int hashfull
 ) {
 }

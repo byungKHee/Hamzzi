@@ -16,14 +16,20 @@ import java.util.StringJoiner;
  * Each go command must be eventually responded to with bestmove, once the search is completed or interrupted.
  */
 public class UciCommandGo implements UciCommand {
+    private static final long CURRMOVE_INFO_THROTTLE_MS = 100L;
+
     public void execute(EngineContext context, String args) {
         context.resetStopSignal();
         parseGoParameters(context, args);
+        final long[] lastCurrMoveInfoAt = {0L};
 
         // 1. 리스너 정의
         SearchListener searchListener = new SearchListener() {
             @Override
             public void onSearchInfo(SearchInfo info) {
+                if (shouldSkipInfo(info, lastCurrMoveInfoAt)) {
+                    return;
+                }
                 context.send(formatInfo(info));
             }
 
@@ -45,6 +51,20 @@ public class UciCommandGo implements UciCommand {
                     searchListener
             );
         }).start();
+    }
+
+    private boolean shouldSkipInfo(SearchInfo info, long[] lastCurrMoveInfoAt) {
+        // depth 완료 시점(score/pv 포함)은 즉시 전달한다.
+        if (info.currMove() == null) {
+            return false;
+        }
+
+        long now = System.currentTimeMillis();
+        if (now - lastCurrMoveInfoAt[0] < CURRMOVE_INFO_THROTTLE_MS) {
+            return true;
+        }
+        lastCurrMoveInfoAt[0] = now;
+        return false;
     }
 
     private void parseGoParameters(EngineContext context, String args) {
@@ -131,10 +151,23 @@ public class UciCommandGo implements UciCommand {
         StringBuilder sb = new StringBuilder();
         sb.append("info depth ").append(info.depth())
                 .append(" seldepth ").append(info.seldepth())
-                .append(" score cp ").append(info.scoreCp())
                 .append(" nodes ").append(info.nodes())
                 .append(" time ").append(info.timeMs())
-                .append(" nps ").append(info.nps());
+                .append(" nps ").append(info.nps())
+                .append(" hashfull ").append(info.hashfull());
+
+        if (info.scoreMate() != null) {
+            sb.append(" score mate ").append(info.scoreMate());
+        } else if (info.scoreCp() != null) {
+            sb.append(" score cp ").append(info.scoreCp());
+        }
+
+        if (info.currMove() != null) {
+            sb.append(" currmove ").append(info.currMove());
+            if (info.currMoveNumber() > 0) {
+                sb.append(" currmovenumber ").append(info.currMoveNumber());
+            }
+        }
 
         List<Move> pv = info.pv();
         if (pv != null && !pv.isEmpty()) {
