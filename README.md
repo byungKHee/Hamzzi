@@ -16,7 +16,7 @@
 | **Maria**  | 1000 | ✅ Cleared     | 2025.12.28 |
 | **Nelson** | 1300 | ✅ Cleared     | 2025.12.28 |
 | **Wendy**  | 1500 | ✅ Cleared     | 2026.02.07 |
-| **Wally**  | 1800 | ✅ Cleared     | 2025.02.07 |
+| **Wally**  | 1800 | ✅ Cleared     | 2026.02.07 |
 | **Li**     | 2000 | 🏗 In Progress |            |
 | **Nora**   | 2200 | 🏗 In Progress |            |
 
